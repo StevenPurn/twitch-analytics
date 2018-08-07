@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import logo from './twitch-logo.png';
 import './App.css';
-import ViewershipOfGame from './Components/ViewershipOfGame';
+import GameAnalytics from './Components/GameAnalytics';
+import ChatAnalytics from './Components/ChatAnalytics';
 import fetchTwitch from './fetch-twitch';
 
 class App extends Component {
@@ -9,15 +10,16 @@ class App extends Component {
     super(props);
     this.state = {
       streamDetails: {
-        user: 'sypherpk',
-        game_id: '33214',
+        user: 'billy1kirby',
+        game_id: '394568',
         viewers: '0',
       }
     }
   }
 
   componentDidMount() {
-    const url = `https://api.twitch.tv/helix/streams?user_login=${this.state.streamDetails['user']}`
+    const username = this.state.streamDetails.user;
+    const url = `https://api.twitch.tv/helix/streams?user_login=${username}`
     fetchTwitch(url)
     .then((data) => {
       if (data['data'].length > 0) {
@@ -48,7 +50,8 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Twitch Analytics</h1>
         </header>
-        <ViewershipOfGame gameId={this.state.streamDetails.game_id} viewers={this.state.streamDetails.viewers} />
+        <GameAnalytics gameId={this.state.streamDetails.game_id} viewers={this.state.streamDetails.viewers} />
+        <ChatAnalytics channel={this.state.streamDetails.user} />
       </div>
     );
   }
