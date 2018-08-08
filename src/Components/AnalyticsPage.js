@@ -142,16 +142,20 @@ class AnalyticsPage extends Component {
   }
 
   updateGameDetails(game_id) {
+    const url = `https://api.twitch.tv/helix/streams?game_id=${game_id}`;
+    fetchTwitch(url)
+    .then((data) => {
 
+    })
   }
 
   updateStreamDetails(username) {
     const url = `https://api.twitch.tv/helix/streams?user_login=${username}`
     fetchTwitch(url)
     .then((data) => {
+      let streamDetails;
       if (data['data'].length > 0) {
         const streamerData = data['data'][0];
-        let streamDetails;
         if (streamerData['type'] === 'live') {
           const newDetails = {
             user: username,
