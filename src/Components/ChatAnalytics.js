@@ -12,11 +12,15 @@ const ChatAnalytics = ({ chat }) => {
     }
     if (chat.topTenActiveUsers) {
       itemsToRender.push(<ListItems list={chat.topTenActiveUsers} title={'Top 10 Chatters'} />);
+      const avgMessages = chat.avgMessagesPerChatter.toFixed(2);
+      itemsToRender.push(<h3>Average messages per chatting user</h3>);
+      itemsToRender.push(<div>{avgMessages}</div>);
     }
   }
 
   return (
     <div className="Chat-analytics-parent">
+      <h1>Chat</h1>
       {itemsToRender}
     </div>
   );
