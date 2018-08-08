@@ -4,6 +4,8 @@ This is a single page app which allows users to monitor real time data analytics
 
 Additionally, the library I was using for the chat can only give me the names of users that have sent a message in chat since the page was loaded. As such, I was only able to track page view time for people that entered and exited the chat while the page is running.
 
+If I had more time I was planning on implementing a live updating chart that would track number of viewers and percentage of total viewers by game over time. 
+
 ## Table of Contents
 
 1. [Usage](#usage)
