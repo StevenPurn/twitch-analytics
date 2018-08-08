@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import GameAnalytics from './GameAnalytics';
 import ChatAnalytics from './ChatAnalytics';
 import fetchTwitch from '../fetch-twitch';
+import { oAuth } from '../api_key/api-key';
 
 const tmi = require('tmi.js');
 
@@ -151,7 +152,7 @@ class AnalyticsPage extends Component {
     let opts = {
       identity: {
         username: 'analyticsrobot',
-        password: 'oauth:995yubntaffgwmbfd3cj3yq1hovuvc'
+        password: oAuth,
       },
         channels: [
           channel
