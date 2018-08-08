@@ -1,4 +1,5 @@
 import React, { Component }  from 'react';
+import { Redirect } from 'react-router';
  
 class Search extends Component {
   constructor(props) {
@@ -16,7 +17,7 @@ class Search extends Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    this.props.onSubmit(this.state.value);
+    this.props.redirect(`/${this.state.value}`);
   }
 
   render() {

@@ -1,9 +1,10 @@
 import React from 'react';
+import Toolbar from './Toolbar';
 
-const Home = () => {
+const Home = ({ history }) => {
   return (
     <div>
-      Home
+      <Toolbar redirect={(value) => history.push(`http://fierce-fjord-27515.herokuapp.com/${value}`)} />
     </div>
   );
 }
