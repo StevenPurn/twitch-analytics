@@ -6,7 +6,7 @@ const ListItems = ({ list, title }) => {
 
   return (
     <div>
-      <h2>{title}</h2>
+      <h3>{title}</h3>
       <ol className="List-items">
         {listElements}
       </ol>
