@@ -22,6 +22,9 @@ class AnalyticsPage extends Component {
         emoteUseCount: {},
         topTenEmotes: [],
         ignoreMessagesFrom: [],
+        userJoinTime: {},
+        userViewTimes: [],
+        emotes: {},
       }
     }
     this.updateStreamDetails = this.updateStreamDetails.bind(this);
@@ -31,6 +34,8 @@ class AnalyticsPage extends Component {
     this.calculateMessageStats = this.calculateMessageStats.bind(this);
     this.calculateEmoteStats = this.calculateEmoteStats.bind(this);
     this.connectToChat = this.connectToChat.bind(this);
+    this.handleUserJoin = this.handleUserJoin.bind(this);
+    this.handleUserPart = this.handleUserPart.bind(this);
   }
 
   setUsernameToIgnore(username) {
@@ -44,7 +49,7 @@ class AnalyticsPage extends Component {
     }
   }
 
-  onMessageHandler(target, context, msg, self) {
+  onMessageHandler(channel, context) {
     const username = context['display-name'];
     const { ignoreMessagesFrom } = this.state.chat;
     if (ignoreMessagesFrom.includes(username)){
@@ -122,6 +127,26 @@ class AnalyticsPage extends Component {
     console.log(`Disconnected: ${reason}`);
   }
 
+  handleUserJoin(channel, username) {
+    const chat = Object.assign({}, this.state.chat);
+    chat.userJoinTime[username] = Date.now();
+    this.setState({
+      chat,
+    });
+  }
+
+  handleUserPart(channel, username) {
+    const chat = Object.assign({}, this.state.chat);
+    if(chat.userJoinTime.hasOwnProperty(username)) {
+      const viewTime = Date.now() - chat.userJoinTime[username];
+      chat.userViewTimes.push(viewTime);
+      delete chat.userJoinTime[username];
+    }
+    this.setState({
+      chat,
+    });
+  }
+
   connectToChat(channel) {
     let opts = {
       identity: {
@@ -137,16 +162,38 @@ class AnalyticsPage extends Component {
       client.on('message', this.onMessageHandler);
       client.on('connected', this.onConnectedHandler);
       client.on('disconnected', this.onDisconnectedHandler);
+      client.on('join', this.handleUserJoin);
+      client.on('part', this.handleUserPart);
       
       client.connect();
   }
 
-  updateGameDetails(game_id) {
-    const url = `https://api.twitch.tv/helix/streams?game_id=${game_id}`;
-    fetchTwitch(url)
-    .then((data) => {
-
-    })
+  updateGameData(gameId) {
+    const originalUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&language=en`;
+    const gameStreams = [];
+    const getGameData = (url) => {
+      fetchTwitch(url)
+      .then(data => {
+        data.data.forEach((stream) => gameStreams.push(stream));
+        if (data.data.length === 20) {
+          getGameData(originalUrl + `&after=${data.pagination.cursor}`);
+        } else {
+          let totalViews = 0;
+          gameStreams.forEach((stream) => {
+            totalViews += stream.viewer_count;
+          });
+          const newDetails = { totalGameViewers: totalViews };
+          const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+          this.setState({
+            streamDetails
+          });
+        }
+      })
+      .catch(err => {
+        throw err;
+      });
+    }
+    getGameData(originalUrl);
   }
 
   updateStreamDetails(username) {
@@ -163,7 +210,7 @@ class AnalyticsPage extends Component {
             viewers: streamerData.viewer_count,
           };
           streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
-          this.updateGameDetails(streamerData.game_id);
+          this.updateGameData(streamerData.game_id);
         }
       } else {
         const newDetails = {
@@ -180,6 +227,9 @@ class AnalyticsPage extends Component {
     .catch((err) => {
       throw err;
     });
+    setTimeout(() => {
+      this.updateStreamDetails(this.props.match.params.username);
+    }, 60000);
   }
 
   componentDidMount() {
@@ -194,7 +244,8 @@ class AnalyticsPage extends Component {
       <div className="Analytics-parent">
         <GameAnalytics
           viewers={streamDetails.viewers} 
-          totalGameViewers={streamDetails.totalGameViewers} />
+          totalGameViewers={streamDetails.totalGameViewers}
+          viewTimes={chat.userViewTimes} />
         <ChatAnalytics chat={chat} />
       </div>
     );
