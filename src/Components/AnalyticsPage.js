@@ -50,7 +50,7 @@ class AnalyticsPage extends Component {
     }
   }
 
-  onMessageHandler(channel, context) {
+  onMessageHandler(channel, context, message) {
     const username = context['display-name'];
     const { ignoreMessagesFrom } = this.state.chat;
     if (ignoreMessagesFrom.includes(username)){
@@ -59,7 +59,14 @@ class AnalyticsPage extends Component {
     const emotes = context['emotes'];
     if (emotes !== null) {
       const { emoteUseCount } = this.state.chat;
-      this.calculateEmoteStats(emotes, emoteUseCount);
+      const emoteKeys = Object.keys(emotes);
+      const emoteNameToCount = {};
+      for (let i = 0; i < emoteKeys.length; i += 1) {
+        const [ startInd, endInd ] = emotes[emoteKeys[i]][0].split('-');
+        const key = message.substring(startInd, parseInt(endInd, 10) + 1);
+        emoteNameToCount[key] = emotes[emoteKeys[i]].length;
+      }
+      this.calculateEmoteStats(emoteNameToCount, emoteUseCount);
     }
 
     const { messagesByUser } = this.state.chat;
@@ -69,7 +76,7 @@ class AnalyticsPage extends Component {
   calculateEmoteStats(emotes, emoteUseCount) {
     const emoteKeys = Object.keys(emotes);
     for (let i = 0; i < emoteKeys.length; i += 1) {
-      const count = emoteKeys[i].length;
+      const count = emotes[emoteKeys[i]];
       if (emoteUseCount[emoteKeys[i]]) {
         emoteUseCount[emoteKeys[i]] += count;
       } else {
@@ -170,13 +177,22 @@ class AnalyticsPage extends Component {
   }
 
   updateGameData(gameId) {
-    const originalUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&language=en`;
+    const originalUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&language=en&first=100`;
     const gameStreams = [];
     const getGameData = (url) => {
       fetchTwitch(url)
       .then(data => {
+        if (data.data === undefined) {
+          console.log("Too many requests: Too many people are streaming the game to get the total viewer count");
+          const newDetails = { totalGameViewers: 0 };
+          const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+          this.setState({
+            streamDetails
+          });
+          return;
+        }
         data.data.forEach((stream) => gameStreams.push(stream));
-        if (data.data.length === 20) {
+        if (data.data.length === 100) {
           getGameData(originalUrl + `&after=${data.pagination.cursor}`);
         } else {
           let totalViews = 0;
