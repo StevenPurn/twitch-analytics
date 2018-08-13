@@ -13,6 +13,7 @@ class AnalyticsPage extends Component {
       streamDetails: {
         user: '',
         game_id: '',
+        gameName: '',
         viewers: 0,
         totalGameViewers: 0,
       },
@@ -22,7 +23,7 @@ class AnalyticsPage extends Component {
         avgMessagesPerChatter: 0,
         emoteUseCount: {},
         topTenEmotes: [],
-        ignoreMessagesFrom: [],
+        ignoreMessagesFrom: ["Nightbot"],
         userJoinTime: {},
         userViewTimes: [],
         emotes: {},
@@ -43,7 +44,11 @@ class AnalyticsPage extends Component {
     const usersToIgnore = this.state.ignoreMessagesFrom.slice();
     if (usersToIgnore.includes(username) === false) {
       usersToIgnore.push(username);
-      const chat = Object.assign({}, this.state.chat, { ignoreMessagesFrom: usersToIgnore });
+      const chat = Object.assign({}, this.state.chat);
+      if(chat.messagesByUser.hasOwnProperty(username)) {
+        delete chat.messagesByUser[username];
+      }
+      chat.usersToIgnore = usersToIgnore;
       this.setState({
         chat
       });
@@ -179,7 +184,9 @@ class AnalyticsPage extends Component {
   updateGameData(gameId) {
     const originalUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&language=en&first=100`;
     const gameStreams = [];
-    const getGameData = (url) => {
+    let totalViews = 0;
+    const getGameStreamsData = (url) => {
+      let foundEnd = false;
       fetchTwitch(url)
       .then(data => {
         if (data.data === undefined) {
@@ -191,11 +198,14 @@ class AnalyticsPage extends Component {
           });
           return;
         }
-        data.data.forEach((stream) => gameStreams.push(stream));
-        if (data.data.length === 100) {
-          getGameData(originalUrl + `&after=${data.pagination.cursor}`);
-        } else {
-          let totalViews = 0;
+        data.data.forEach((stream) => {
+          if (stream.viewer_count < 1) {
+            foundEnd = true;
+            return;
+          }
+          gameStreams.push(stream);
+        });
+        if (foundEnd || data.data.length < 100) {
           gameStreams.forEach((stream) => {
             totalViews += stream.viewer_count;
           });
@@ -204,13 +214,30 @@ class AnalyticsPage extends Component {
           this.setState({
             streamDetails
           });
+        } else {
+          getGameStreamsData(originalUrl + `&after=${data.pagination.cursor}`);
         }
       })
       .catch(err => {
         throw err;
       });
     }
-    getGameData(originalUrl);
+    const gameUrl = `https://api.twitch.tv/helix/games?id=${gameId}`;
+    fetchTwitch(gameUrl)
+    .then(data => {
+      if (data.data) {
+        const name = data.data[0].name;
+        const newDetails = { gameName: name };
+        const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+        this.setState({
+          streamDetails
+        });
+      }
+    })
+    .catch(err => {
+      throw err;
+    })
+    getGameStreamsData(originalUrl);
   }
 
   updateStreamDetails(username) {
@@ -260,6 +287,7 @@ class AnalyticsPage extends Component {
     return (
       <div className="Analytics-parent">
         <GameAnalytics
+          gameName={streamDetails.gameName}
           viewers={streamDetails.viewers} 
           totalGameViewers={streamDetails.totalGameViewers}
           viewTimes={chat.userViewTimes} />
