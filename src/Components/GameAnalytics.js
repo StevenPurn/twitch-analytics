@@ -2,7 +2,7 @@ import React from 'react';
 import './GameAnalytics.css';
 
 
-const GameAnalytics = ({ viewers, totalGameViewers, viewTimes }) =>  {
+const GameAnalytics = ({ viewers, totalGameViewers, viewTimes, gameName }) =>  {
   let percentViews = Math.floor((viewers / totalGameViewers) * 100);
   if (totalGameViewers < 1) {
     percentViews = 0;
@@ -17,7 +17,7 @@ const GameAnalytics = ({ viewers, totalGameViewers, viewTimes }) =>  {
   const readableViewTime = (seconds === 60 ? (minutes+1) + ":00" : minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
   return (
     <div className="Game-analytics-parent">
-      <h1>Game</h1>
+      <h1>{gameName}</h1>
       <h3>Current Viewer Count</h3>
       <div className='Stat'>{viewers}</div>
       <h3>Percentage of total views for the game</h3>
