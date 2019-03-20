@@ -1,5 +1,4 @@
 import React, { Component }  from 'react';
-import { Redirect } from 'react-router';
  
 class Search extends Component {
   constructor(props) {
@@ -9,14 +8,14 @@ class Search extends Component {
     };
   }
 
-  handleInputChange(e) {
+  handleInputChange({ target: value }) {
     this.setState({
-      value: e.target.value
+      value
     });
   }
 
-  handleSubmit(e) {
-    e.preventDefault();
+  handleSubmit({ preventDefault }) {
+    preventDefault();
     this.props.redirect(`/${this.state.value}`);
   }
 

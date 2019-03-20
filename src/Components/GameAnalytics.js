@@ -3,18 +3,18 @@ import './GameAnalytics.css';
 
 
 const GameAnalytics = ({ viewers, totalGameViewers, viewTimes, gameName }) =>  {
-  let percentViews = Math.floor((viewers / totalGameViewers) * 100);
-  if (totalGameViewers < 1) {
-    percentViews = 0;
-  }
-  let sum = 0;
-  if (viewTimes.length > 0) {
-    sum = viewTimes.reduce((a, b) => a + b);
-  }
+  const percentViews = totalGameViewers < 1 
+    ? 0 
+    : Math.floor((viewers / totalGameViewers) * 100);
+  const sum = viewTimes.length > 0
+    ? viewTimes.reduce((a, b) => a + b) 
+    : 0;
   const avgViewTime = sum / viewTimes.length;
-  const minutes = Math.floor(avgViewTime / 60000);
   const seconds = ((avgViewTime % 60000) / 1000).toFixed(0);
-  const readableViewTime = (seconds === 60 ? (minutes+1) + ":00" : minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
+  const minutes = seconds === 60 
+  ? Math.floor(avgViewTime / 60000) + 1
+  : Math.floor(avgViewTime / 60000);
+  const readableViewTime = `${minutes}:${(seconds < 10 ? "0" : "") + seconds}`;
   return (
     <div className="Game-analytics-parent">
       <h1>{gameName}</h1>

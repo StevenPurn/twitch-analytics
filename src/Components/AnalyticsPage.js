@@ -29,6 +29,7 @@ class AnalyticsPage extends Component {
         emotes: {},
       }
     }
+    this.addUsernameToIgnore = this.addUsernameToIgnore.bind(this);
     this.updateStreamDetails = this.updateStreamDetails.bind(this);
     this.onMessageHandler = this.onMessageHandler.bind(this);
     this.onConnectedHandler = this.onConnectedHandler.bind(this);
@@ -40,11 +41,11 @@ class AnalyticsPage extends Component {
     this.handleUserPart = this.handleUserPart.bind(this);
   }
 
-  setUsernameToIgnore(username) {
+  addUsernameToIgnore(username) {
     const usersToIgnore = this.state.ignoreMessagesFrom.slice();
     if (usersToIgnore.includes(username) === false) {
       usersToIgnore.push(username);
-      const chat = Object.assign({}, this.state.chat);
+      const { chat } = this.state;
       if(chat.messagesByUser.hasOwnProperty(username)) {
         delete chat.messagesByUser[username];
       }
@@ -61,7 +62,7 @@ class AnalyticsPage extends Component {
     if (ignoreMessagesFrom.includes(username)){
       return;
     }
-    const emotes = context['emotes'];
+    const { emotes } = context;
     if (emotes !== null) {
       const { emoteUseCount } = this.state.chat;
       const emoteKeys = Object.keys(emotes);
@@ -81,12 +82,11 @@ class AnalyticsPage extends Component {
   calculateEmoteStats(emotes, emoteUseCount) {
     const emoteKeys = Object.keys(emotes);
     for (let i = 0; i < emoteKeys.length; i += 1) {
-      const count = emotes[emoteKeys[i]];
-      if (emoteUseCount[emoteKeys[i]]) {
-        emoteUseCount[emoteKeys[i]] += count;
-      } else {
-        emoteUseCount[emoteKeys[i]] = count;
-      }
+      const key = emoteKeys[i];
+      const count = emotes[key];
+      emoteUseCount[key] = emoteUseCount[key] == null
+        ? count
+        : emoteUseCount[key] + count;
     }
     const newTopTenEmotes = [];
     const keys = Object.keys(emoteUseCount);
@@ -107,11 +107,9 @@ class AnalyticsPage extends Component {
   }
 
   calculateMessageStats(messagesByUser, username) {
-    if (messagesByUser[username]) {
-      messagesByUser[username] += 1;
-    } else {
-      messagesByUser[username] = 1;
-    }
+    messagesByUser[username] = messagesByUser[username] == null
+      ? 1
+      : messagesByUser[username] + 1;
     const newTopTenActiveUsers = [];
     let totalMessages = 0;
     const keys = Object.keys(messagesByUser);
@@ -141,7 +139,7 @@ class AnalyticsPage extends Component {
   }
 
   handleUserJoin(channel, username) {
-    const chat = Object.assign({}, this.state.chat);
+    const { chat } = this.state;
     chat.userJoinTime[username] = Date.now();
     this.setState({
       chat,
@@ -149,7 +147,7 @@ class AnalyticsPage extends Component {
   }
 
   handleUserPart(channel, username) {
-    const chat = Object.assign({}, this.state.chat);
+    const { chat } = this.state;
     if(chat.userJoinTime.hasOwnProperty(username)) {
       const viewTime = Date.now() - chat.userJoinTime[username];
       chat.userViewTimes.push(viewTime);
@@ -161,7 +159,7 @@ class AnalyticsPage extends Component {
   }
 
   connectToChat(channel) {
-    let opts = {
+    const opts = {
       identity: {
         username: 'analyticsrobot',
         password: oAuth,
@@ -170,26 +168,26 @@ class AnalyticsPage extends Component {
           channel
         ]
       };
-      let client = new tmi.client(opts);
-      
-      client.on('message', this.onMessageHandler);
-      client.on('connected', this.onConnectedHandler);
-      client.on('disconnected', this.onDisconnectedHandler);
-      client.on('join', this.handleUserJoin);
-      client.on('part', this.handleUserPart);
-      
-      client.connect();
+    const client = new tmi.client(opts);
+    
+    client.on('message', this.onMessageHandler);
+    client.on('connected', this.onConnectedHandler);
+    client.on('disconnected', this.onDisconnectedHandler);
+    client.on('join', this.handleUserJoin);
+    client.on('part', this.handleUserPart);
+    
+    client.connect();
   }
 
   updateGameData(gameId) {
     const originalUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&language=en&first=100`;
     const gameStreams = [];
     let totalViews = 0;
-    const getGameStreamsData = (url) => {
+    const getGameStreamsData = url => {
       let foundEnd = false;
       fetchTwitch(url)
-      .then(data => {
-        if (data.data === undefined) {
+      .then(({ data }) => {
+        if (data === undefined) {
           console.log("Too many requests: Too many people are streaming the game to get the total viewer count");
           const newDetails = { totalGameViewers: 0 };
           const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
@@ -198,14 +196,14 @@ class AnalyticsPage extends Component {
           });
           return;
         }
-        data.data.forEach((stream) => {
+        data.forEach((stream) => {
           if (stream.viewer_count < 1) {
             foundEnd = true;
             return;
           }
           gameStreams.push(stream);
         });
-        if (foundEnd || data.data.length < 100) {
+        if (foundEnd || data.length < 100) {
           gameStreams.forEach((stream) => {
             totalViews += stream.viewer_count;
           });
@@ -224,9 +222,9 @@ class AnalyticsPage extends Component {
     }
     const gameUrl = `https://api.twitch.tv/helix/games?id=${gameId}`;
     fetchTwitch(gameUrl)
-    .then(data => {
-      if (data.data) {
-        const name = data.data[0].name;
+    .then(({ data }) => {
+      if (data) {
+        const name = data[0].name;
         const newDetails = { gameName: name };
         const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
         this.setState({
@@ -243,11 +241,11 @@ class AnalyticsPage extends Component {
   updateStreamDetails(username) {
     const url = `https://api.twitch.tv/helix/streams?user_login=${username}`
     fetchTwitch(url)
-    .then((data) => {
+    .then(({ data }) => {
       let streamDetails;
-      if (data['data'].length > 0) {
-        const streamerData = data['data'][0];
-        if (streamerData['type'] === 'live') {
+      if (data.length > 0) {
+        const streamerData = data[0];
+        if (streamerData.type === 'live') {
           const newDetails = {
             user: username,
             game_id: streamerData.game_id,
@@ -268,11 +266,11 @@ class AnalyticsPage extends Component {
         streamDetails
       });
     })
-    .catch((err) => {
+    .catch(err => {
       throw err;
     });
     setTimeout(() => {
-      this.updateStreamDetails(this.props.match.params.username);
+      this.updateStreamDetails(username);
     }, 60000);
   }
 

@@ -1,6 +1,6 @@
 import { api, client } from './api_key/api-key';
 
-const fetchTwitch = (url) => {
+const fetchTwitch = url => {
   const headers = new Headers({
     'Client-Id': client,
     'Twitch-Api-Token': api,

@@ -2,7 +2,7 @@ import React from 'react';
 
 const ListItems = ({ list, title }) => {
 
-  const listElements = list.map((item) => <li key={item.name}>{item.name}: {item.count}</li>);
+  const listElements = list.map(({ name, count }) => <li key={name}>{name}: {count}</li>);
 
   return (
     <div>
