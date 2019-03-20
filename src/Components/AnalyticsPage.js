@@ -45,11 +45,11 @@ class AnalyticsPage extends Component {
     const usersToIgnore = this.state.ignoreMessagesFrom.slice();
     if (usersToIgnore.includes(username) === false) {
       usersToIgnore.push(username);
-      const { chat } = this.state;
+      const chat = {...this.state.chat};
       if(chat.messagesByUser.hasOwnProperty(username)) {
         delete chat.messagesByUser[username];
       }
-      chat.usersToIgnore = usersToIgnore;
+      chat.ignoreMessagesFrom = usersToIgnore;
       this.setState({
         chat
       });
@@ -58,13 +58,13 @@ class AnalyticsPage extends Component {
 
   onMessageHandler(channel, context, message) {
     const username = context['display-name'];
-    const { ignoreMessagesFrom } = this.state.chat;
+    const ignoreMessagesFrom = this.state.chat.ignoreMessagesFrom.slice();
     if (ignoreMessagesFrom.includes(username)){
       return;
     }
     const { emotes } = context;
     if (emotes !== null) {
-      const { emoteUseCount } = this.state.chat;
+      const emoteUseCount = {...this.state.chat.emoteUseCount};
       const emoteKeys = Object.keys(emotes);
       const emoteNameToCount = {};
       for (let i = 0; i < emoteKeys.length; i += 1) {
@@ -100,7 +100,10 @@ class AnalyticsPage extends Component {
       topTenEmotes: newTopTenEmotes.slice(0, 10),
       emoteUseCount
     };
-    const chat = Object.assign({}, this.state.chat, newChat);
+    const chat = {
+      ...this.state.chat,
+      ...newChat
+    };
     this.setState({
       chat
     });
@@ -124,7 +127,7 @@ class AnalyticsPage extends Component {
       topTenActiveUsers: newTopTenActiveUsers.slice(0, 10),
       avgMessagesPerChatter: totalMessages/keys.length,
     };
-    const chat = Object.assign({}, this.state.chat, newChat);
+    const chat = { ...this.state.chat, ...newChat };
     this.setState({
       chat
     });
@@ -139,7 +142,7 @@ class AnalyticsPage extends Component {
   }
 
   handleUserJoin(channel, username) {
-    const { chat } = this.state;
+    const chat = { ...this.state.chat };
     chat.userJoinTime[username] = Date.now();
     this.setState({
       chat,
@@ -147,7 +150,7 @@ class AnalyticsPage extends Component {
   }
 
   handleUserPart(channel, username) {
-    const { chat } = this.state;
+    const chat = { ...this.state.chat };
     if(chat.userJoinTime.hasOwnProperty(username)) {
       const viewTime = Date.now() - chat.userJoinTime[username];
       chat.userViewTimes.push(viewTime);
@@ -159,7 +162,7 @@ class AnalyticsPage extends Component {
   }
 
   connectToChat(channel) {
-    const opts = {
+    const options = {
       identity: {
         username: 'analyticsrobot',
         password: oAuth,
@@ -168,7 +171,7 @@ class AnalyticsPage extends Component {
           channel
         ]
       };
-    const client = new tmi.client(opts);
+    const client = new tmi.client(options);
     
     client.on('message', this.onMessageHandler);
     client.on('connected', this.onConnectedHandler);
@@ -186,11 +189,11 @@ class AnalyticsPage extends Component {
     const getGameStreamsData = url => {
       let foundEnd = false;
       fetchTwitch(url)
-      .then(({ data }) => {
+      .then(({ data, pagination }) => {
         if (data === undefined) {
           console.log("Too many requests: Too many people are streaming the game to get the total viewer count");
           const newDetails = { totalGameViewers: 0 };
-          const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+          const streamDetails = { ...this.state.streamDetails, ...newDetails };
           this.setState({
             streamDetails
           });
@@ -208,12 +211,12 @@ class AnalyticsPage extends Component {
             totalViews += stream.viewer_count;
           });
           const newDetails = { totalGameViewers: totalViews };
-          const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+          const streamDetails = { ...this.state.streamDetails, ...newDetails };
           this.setState({
             streamDetails
           });
         } else {
-          getGameStreamsData(originalUrl + `&after=${data.pagination.cursor}`);
+          getGameStreamsData(`${originalUrl}&after=${pagination.cursor}`);
         }
       })
       .catch(err => {
@@ -226,7 +229,7 @@ class AnalyticsPage extends Component {
       if (data) {
         const name = data[0].name;
         const newDetails = { gameName: name };
-        const streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+        const streamDetails = { ...this.state.streamDetails, ...newDetails };
         this.setState({
           streamDetails
         });
@@ -251,7 +254,7 @@ class AnalyticsPage extends Component {
             game_id: streamerData.game_id,
             viewers: streamerData.viewer_count,
           };
-          streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+          streamDetails = { ...this.state.streamDetails, ...newDetails };
           this.updateGameData(streamerData.game_id);
         }
       } else {
@@ -260,7 +263,7 @@ class AnalyticsPage extends Component {
           game_id: '',
           viewers: 0,
         };
-        streamDetails = Object.assign({}, this.state.streamDetails, newDetails);
+        streamDetails = { ...this.state.streamDetails, ...newDetails };
       }
       this.setState({
         streamDetails

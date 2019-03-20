@@ -5,13 +5,13 @@ import './ChatAnalytics.css';
 const ChatAnalytics = ({ chat }) => {
   const itemsToRender = [];
   if (chat.topTenEmotes){
-    itemsToRender.push(<ListItems list={chat.topTenEmotes} title={'Top 10 Emotes'} />);
+    itemsToRender.push(<ListItems key="topTenEmotes" list={chat.topTenEmotes} title={'Top 10 Emotes'} />);
   }
   if (chat.topTenActiveUsers) {
     const avgMessages = chat.avgMessagesPerChatter.toFixed(2);
-    itemsToRender.push(<ListItems list={chat.topTenActiveUsers} title={'Top 10 Chatters'} />);
-    itemsToRender.push(<h3>Average messages per chatting user</h3>);
-    itemsToRender.push(<div>{avgMessages}</div>);
+    itemsToRender.push(<ListItems key="topTenChatters" list={chat.topTenActiveUsers} title={'Top 10 Chatters'} />);
+    itemsToRender.push(<h3 key="avgMessgaes">Average messages per chatting user</h3>);
+    itemsToRender.push(<div key={avgMessages}>{avgMessages}</div>);
   }
 
   return (

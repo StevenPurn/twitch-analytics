@@ -14,7 +14,7 @@ const GameAnalytics = ({ viewers, totalGameViewers, viewTimes, gameName }) =>  {
   const minutes = seconds === 60 
   ? Math.floor(avgViewTime / 60000) + 1
   : Math.floor(avgViewTime / 60000);
-  const readableViewTime = `${minutes}:${(seconds < 10 ? "0" : "") + seconds}`;
+  const readableViewTime = `${minutes}:${(seconds < 10 ? '0' : '') + seconds}`;
   return (
     <div className="Game-analytics-parent">
       <h1>{gameName}</h1>

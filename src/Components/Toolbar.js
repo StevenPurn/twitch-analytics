@@ -6,6 +6,8 @@ class Search extends Component {
     this.state = {
       value: ''
     };
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
   }
 
   handleInputChange({ target: value }) {
@@ -22,13 +24,13 @@ class Search extends Component {
   render() {
     return (
       <div>
-        <form onSubmit={this.handleSubmit.bind(this)}>
+        <form onSubmit={this.handleSubmit}>
           <input
             className="form-control"
             type="text"
             placeholder="Twitch username"
             value={this.state.value}
-            onChange={this.handleInputChange.bind(this)}
+            onChange={this.handleInputChange}
           />
           <input type="submit" />
         </form>
