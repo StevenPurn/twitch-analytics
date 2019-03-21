@@ -1,7 +1,7 @@
 import React from 'react';
 import { Switch, Route } from 'react-router';
 import logo from './twitch-logo.png';
-import AnalyticsPage from './Components/AnalyticsPage';
+import AnalyticsPage from './Components/Analytics/AnalyticsPage';
 import Home from './Components/Home';
 import './App.css';
 

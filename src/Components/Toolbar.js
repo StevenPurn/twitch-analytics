@@ -10,9 +10,9 @@ class Search extends Component {
     this.handleInputChange = this.handleInputChange.bind(this);
   }
 
-  handleInputChange({ target: value }) {
+  handleInputChange(e) {
     this.setState({
-      value
+      value: e.target.value
     });
   }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import ListItems from './ListItems';
+import ListItems from '../ListItems';
 import './ChatAnalytics.css';
 
 const ChatAnalytics = ({ chat }) => {
