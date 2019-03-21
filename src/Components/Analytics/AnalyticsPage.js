@@ -31,6 +31,7 @@ class AnalyticsPage extends Component {
     }
     this.addUsernameToIgnore = this.addUsernameToIgnore.bind(this);
     this.setChat = this.setChat.bind(this);
+    this.setStreamDetails = this.setStreamDetails.bind(this);
     this.updateStreamDetails = this.updateStreamDetails.bind(this);
     this.onMessageHandler = this.onMessageHandler.bind(this);
     this.onConnectedHandler = this.onConnectedHandler.bind(this);
@@ -71,6 +72,16 @@ class AnalyticsPage extends Component {
     };
     this.setState({
       chat
+    });
+  }
+
+  setStreamDetails(newStreamDetails) {
+    const streamDetails = {
+      ...this.state.streamDetails,
+      ...newStreamDetails
+    };
+    this.setState({
+      streamDetails
     });
   }
 
@@ -126,36 +137,18 @@ class AnalyticsPage extends Component {
   updateStreamDetails(username) {
     getStreamDetails(username)
     .then(details => {
-      const streamDetails = {
-        ...this.state.streamDetails,
-        ...details,
-      }
-      this.setState({
-        streamDetails,
-      });
-      return streamDetails.game_id;
+      this.setStreamDetails(details);
+      return details.game_id;
     })
     .then(gameId => {
       getGameData(gameId)
       .then(data => {
-        const streamDetails = {
-          ...this.state.streamDetails,
-          ...data,
-        }
-        this.setState({
-          streamDetails,
-        });
+        this.setStreamDetails(data);
       });
       getTotalViewersForGame(gameId)
       .then(totalGameViewers => {
         if (totalGameViewers != null) {
-          const streamDetails = {
-            ...this.state.streamDetails,
-            ...{ totalGameViewers },
-          };
-          this.setState({
-            streamDetails,
-          });
+          this.setStreamDetails({ totalGameViewers })
         }
       });
     });
