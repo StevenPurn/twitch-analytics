@@ -1,5 +1,5 @@
 import React from 'react';
-import getReadableTime from './ReadableTime';
+import getReadableTime from '../../ReadableTime';
 import './GameAnalytics.css';
 
 
